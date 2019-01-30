@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<search> 
+  
+  
+    
+    <entry>
+      <title>用自增主键无数遍，但你真懂InnoDB自增吗？</title>
+      <link href="/2017/12/28/mysql-auto-increment/"/>
+      <url>/2017/12/28/mysql-auto-increment/</url>
+      
+        <content type="html"><![CDATA[<p>在一次宕机之后重启Mysql服务器并恢复数据的过程中发现了自增主键列的自增数值会回退，导致有数据上有冲突。<br>经过一番的排查之后发现了一个非常容易被忽略的事实，Mysql中自增ID的值在一定条件下会回退！因此导致自增主键有重复导，外键关联失效引起。</p><p>我们来举个例子说明一下具体的现象：<br>例如，创建一个个InNoDB引擎表:<br><pre><code>CREATE TABLE `bsession`  (    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,    `aname` varchar(80) NOT NULL DEFAULT ‘’,    PRIMARY KEY (`id`)) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;</code></pre></p><p>创建数据表之后，我们来插入一些数据来重现一下效果，插入 10条数据，<br><pre><code>INSERT INTO `bsession` (aname) values (&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a’);</code></pre></p><p>接下来，再删除最后的几条数据，看看id的变化是怎样的，<br><pre><code>DELETE FROM bsession where id in (8,9,10);</code></pre></p><p><img src="/img/2017-12-28/mysql_innodb_auto_increment1.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p><p>在删除部分数据之后表中的仅有7条，且最大的’id’ = 7, 现在进行数据库重启，并重新插入10条数据，我们验证一下自增列从8还是11开始自增计数，<br>看下图的数据变化，注意：id列的增长情况</p><p><img src="/img/2017-12-28/mysql_innodb_auto_increment2.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p><p> 结果事实证明，自增列 id 的值出现了回滚，不是从11开始计数生成新纪录，而是继续了表中最大id，从8开始计数。<br> 说到这里肯定有人要问了是什么原因导致 自增属性字段，在重启后会回退呢？<br> 根据现象猜测大致原因如下：<br> <em>InNoDB的存储引擎是将AUTO_INCREMENT计数器的累计值存放到主内存中的; </em>大概是为了计数器的频繁跟新，为了保证速速并非存入硬盘文件，<br> *因为内存存储，当重启后内存数据就丢失了，启动后计数器的值只好从表中MAX(自增字段)来获取当前最大计数器值</p><p>要了解真实的原因以及进一步确认MySql的InnoDB引擎是如何处理自增列的，翻看查看官方文档找到了如下内容：<br><blockquote><p><img src="/img/2017-12-28/mysql_innodb_auto_increment3.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p><footer><strong>AUTO_INCREMENT Handling in InnoDB</strong><cite><a href="https://dev.mysql.com/doc/refman/5.7/en/innodb-auto-increment-handling.html" target="_blank" rel="noopener">MySQL 5.7 Reference Manual</a></cite></footer></blockquote></p><p>查阅了不同版本的官方手册确认了截止Mysql 5.7 所有版本都存在这个问题，不过这个特性将在Mysql的下一个版本8.0中更改。<br>自增计数器每次更改时，当前的最大自增计数器值将会被写入redo log中，并保存到InnoDB引擎的私有系统表中，记录到每个检查点， 实现自增计数器的持久化，重启后值会保持一致。</p><p>当服器在Crash中恢复后，重启过程中InnoDB使用存储在系统字典表里的当前最大自增，并且从最后一个检查点开始扫描RedoLog中的计数器值。如果Redo Log中的值大于内存中的计数器值，Redo Log中的值将会被采用。</p><p>关于后续版本中对于 自增列的处理机制的更详细说明，请查看官方文档，这里不在赘述。<br><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-auto-increment-handling.html" title="[external] [MySQL 8.0 Reference Manual]" target="_blank" rel="noopener">InnoDB AUTO_INCREMENT Lock Modes</a></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 数据库 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> mysql </tag>
+            
+            <tag> InnoDB </tag>
+            
+            <tag> auto_increment </tag>
+            
+            <tag> 自增 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>IT从业人的职业规划</title>
+      <link href="/2017/12/28/IT%E8%81%8C%E4%B8%9A%E8%A7%84%E5%88%92/"/>
+      <url>/2017/12/28/IT%E8%81%8C%E4%B8%9A%E8%A7%84%E5%88%92/</url>
+      
+        <content type="html"><![CDATA[<blockquote><p>当你对某种技能已经有了一定的了解，开始觉得自己如同“行尸走肉”，成为一个开发工具的时候，那就应该要明确一下自己的发展方向了。</p><footer><strong>某位技术大牛</strong><cite>Sawyer.Lee</cite></footer></blockquote><h1 id="从大的方向来说基本三个大方向"><a href="#从大的方向来说基本三个大方向" class="headerlink" title="从大的方向来说基本三个大方向"></a>从大的方向来说基本三个大方向</h1><h2 id="单方面技术发展方向："><a href="#单方面技术发展方向：" class="headerlink" title="单方面技术发展方向："></a>单方面技术发展方向：</h2><ul><li><p>技术大牛方向：<br>1、精通PHP,Python,Java等语言特性，正确的使用各种语法、各种函数，编码规范、已读。<br>2、灵活运用各种数据类型，深入了解和应用语言数据结构、DB、NO-SQL。<br>3、正确合理的实现控制逻辑、更好地算法实现。</p></li><li><p>架构师方向:<br>1、真正去理解OOD、OOP思想并在实际开发工作中充分应用OO的设计、编码方法；<br>2、提高代码封装度(隔离保护，安全、降低复杂度，高复用好维护)、多态性(更好的维护性，更通用)、继承（更高的复用性扩展性）、<br>3、功能模块化、组件化、自动化、工具配置化。<br>4、很好的数据处理、高并发设计、大压力系统设计和优化。</p></li><li><p>技术专家方向：<br>1、设计优化框架，公共库组件、模块；成熟的业务模型解决方案。<br>2、吃透核心原理、WebServer运行原理、WebServer与PHP的通信原理等深入机制理解透彻，各种深度扩展，最大化发挥效率。<br>3、熟悉C并灵活运用可以写PHP扩展，定制化扩展和组件。</p></li></ul><h2 id="从技术向业务方向过渡。"><a href="#从技术向业务方向过渡。" class="headerlink" title="从技术向业务方向过渡。"></a>从技术向业务方向过渡。</h2><ul><li><p>第一个层级：<br>1、扎实的技术基础知识（HTML、CSS、JS、PS切图、UI、程序逻辑、数据库、程序体系结构）。<br>2、了解各种业务模型、各种行业业务流程，大致的开发流程、关键技术点、工作量（电商、游戏、金融、支付、App）。<br>3、最重要的沟通能力、业务理解能力、可以做好产品需求与开发人员的桥梁，熟悉项目管理。</p></li><li><p>第二层级：<br>1、较丰富的开发经验、了解各种开发语言以及特性、大用户高并发大数据系统经验，系统集成经验。<br>2、精通各种业务模型、数据统计方式、统计数据意义和价值、工作量的把握，业务拆分质量、验收、评估监督等。<br>3、很好的项目管理能力，理解能力极强，可沟通协调解决各种资源冲突、成本管理、风险管理等等，了解项目组人员性格量材分配。</p></li><li><p>第三个层级：<br>1、丰富的开发经验、熟悉各种开发语言以及特性、大用户高并发大数据系统经验，系统集成经验，熟悉各种解决方案。<br>2、业务把控能力、需求把关审核、深入了解各种业务模块、了解行业特性、竞争者情况并作出相应的决策。<br>3、管理多个项目组，hold住各种任务、各种部门和团队沟通协调、高级项目管理能力，PMP, 3Sigma, 6Sigma, CPM, TOGAF 等等。</p></li><li><p>第四个层级：<br>AVP/VP/FVP/GM….CEO…</p></li></ul><h2 id="从程序员向技术管理方向过渡。"><a href="#从程序员向技术管理方向过渡。" class="headerlink" title="从程序员向技术管理方向过渡。"></a>从程序员向技术管理方向过渡。</h2><ul><li>技术TL、很好的技术能力、能带新人、可以解决小组各种问题、性能优化、系统整合，核心业务开发。</li><li>技术TM/EM，团队管理、技术方案、很好的技术能力、丰富开发经验、大系统经验、架构、框架等等….</li><li>技术TD/ED，部门管理、研发团队管理、基层技术方案设计、技术方向把关、新技术研究应用、技术方案决策。</li><li>CTO/CIO…</li></ul>]]></content>
+      
+      
+      
+        <tags>
+            
+            <tag> IT行业 </tag>
+            
+            <tag> 职业规划 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+  
+  
+</search>
