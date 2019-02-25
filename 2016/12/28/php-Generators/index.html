@@ -681,28 +681,35 @@ $log-&gt;send(&quot;Third&quot;);</code></pre></p>
             <div class="article-badge left-badge text-color">
                 <i class="fa fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2017/12/28/IT职业规划/">
+                <a href="/2017/02/20/Redis管道提升操作性能/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="IT从业人的职业规划">
+                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="使用Redis管道提升批量操作性能">
                         
-                        <span class="card-title">IT从业人的职业规划</span>
+                        <span class="card-title">使用Redis管道提升批量操作性能</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
-                    <div class="summary">当你对某种技能已经有了一定的了解，开始觉得自己如同“行尸走肉”，成为一个开发工具的时候，那就应该要明确一下自己的发展方向了。
-某位技术大牛Sawyer.Lee
-从大的方向来说基本三个大方向单方面技术发展方向：
-技术大牛方向：1、精通PHP,</div>
+                    <div class="summary">#简介
+
+最近在工作中使用了Redis的管道技术。
+发现对于互不相关的多次Redis操作使用管道可以极大的提升性能。
+特此记录。#浅析
+个人觉得问题可能出在TCP连接上。
+Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量</div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="fa fa-clock-o fa-fw icon-date"></i>2017-12-28
+                            <i class="fa fa-clock-o fa-fw icon-date"></i>2017-02-20
                         </span>
                         <span class="publish-author">
                             
-                            <i class="fa fa-user fa-fw"></i>
-                            shyeus@gmail.com
+                            <i class="fa fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/Redis/" class="post-category" target="_blank">
+                                    Redis
+                                </a>
+                            
                             
                         </span>
                     </div>
@@ -710,12 +717,20 @@ $log-&gt;send(&quot;Third&quot;);</code></pre></p>
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/IT行业/" target="_blank">
-                        <span class="chip text-color">IT行业</span>
+                    <a href="/tags/PHP/" target="_blank">
+                        <span class="chip text-color">PHP</span>
                     </a>
                     
-                    <a href="/tags/职业规划/" target="_blank">
-                        <span class="chip text-color">职业规划</span>
+                    <a href="/tags/Redis/" target="_blank">
+                        <span class="chip text-color">Redis</span>
+                    </a>
+                    
+                    <a href="/tags/管道/" target="_blank">
+                        <span class="chip text-color">管道</span>
+                    </a>
+                    
+                    <a href="/tags/性能提升/" target="_blank">
+                        <span class="chip text-color">性能提升</span>
                     </a>
                     
                 </div>

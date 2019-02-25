@@ -5,8 +5,8 @@
 
 <head><meta name="generator" content="Hexo 3.8.0">
     <meta charset="utf-8">
-    <meta name="keywords" content="用自增主键无数遍，但你真懂InnoDB自增吗？, Blogs of Sawyer.Lee">
-    <meta name="description" content="在一次宕机之后重启Mysql服务器并恢复数据的过程中发现了自增主键列的自增数值会回退，导致有数据上有冲突。经过一番的排查之后发现了一个非常容易被忽略的事实，Mysql中自增ID的值在一定条件下会回退！因此导致自增主键有重复导，外键关联失效引">
+    <meta name="keywords" content="CGI，FastCGI以及PHP的实现, Blogs of Sawyer.Lee">
+    <meta name="description" content="什么是CGI：通用网关接口，是WebServer和外部程序之间的通讯协议。早期的WebServer是只处理静态内容的，但是随着WWW的发展交互性要求越来越强，出现了各种动态处理语言实现复杂的功能。Web端的业务逻辑越来越复杂将这些都交给We">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -14,7 +14,7 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>用自增主键无数遍，但你真懂InnoDB自增吗？ | Blogs of Sawyer.Lee</title>
+    <title>CGI，FastCGI以及PHP的实现 | Blogs of Sawyer.Lee</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/font-awesome.min.css">
@@ -278,13 +278,13 @@
 
 
 
-<div class="bg-cover post-cover" style="background-image: url('/medias/featureimages/19.jpg')">
+<div class="bg-cover post-cover" style="background-image: url('/medias/featureimages/13.jpg')">
     <div class="container">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
                     <div class="description center-align post-title">
-                        用自增主键无数遍，但你真懂InnoDB自增吗？
+                        CGI，FastCGI以及PHP的实现
                     </div>
                 </div>
             </div>
@@ -306,20 +306,24 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/mysql/" target="_blank">
-                                <span class="chip text-color">mysql</span>
+                            <a href="/tags/PHP/" target="_blank">
+                                <span class="chip text-color">PHP</span>
                             </a>
                         
-                            <a href="/tags/InnoDB/" target="_blank">
-                                <span class="chip text-color">InnoDB</span>
+                            <a href="/tags/CGI/" target="_blank">
+                                <span class="chip text-color">CGI</span>
                             </a>
                         
-                            <a href="/tags/auto-increment/" target="_blank">
-                                <span class="chip text-color">auto_increment</span>
+                            <a href="/tags/FastCGI/" target="_blank">
+                                <span class="chip text-color">FastCGI</span>
                             </a>
                         
-                            <a href="/tags/自增/" target="_blank">
-                                <span class="chip text-color">自增</span>
+                            <a href="/tags/PHP-FPM/" target="_blank">
+                                <span class="chip text-color">PHP-FPM</span>
+                            </a>
+                        
+                            <a href="/tags/PHP-CGI/" target="_blank">
+                                <span class="chip text-color">PHP-CGI</span>
                             </a>
                         
                     </div>
@@ -330,8 +334,8 @@
                     <div class="post-cate">
                         <i class="fa fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/数据库/" class="post-category" target="_blank">
-                                数据库
+                            <a href="/categories/PHP/" class="post-category" target="_blank">
+                                PHP
                             </a>
                         
                     </div>
@@ -342,7 +346,7 @@
             <div class="post-info">
                 <div class="post-date info-break-policy">
                     <i class="fa fa-calendar-minus-o fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2017-12-28
+                    2019-02-25
                 </div>
 
                 
@@ -358,24 +362,51 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>在一次宕机之后重启Mysql服务器并恢复数据的过程中发现了自增主键列的自增数值会回退，导致有数据上有冲突。<br>经过一番的排查之后发现了一个非常容易被忽略的事实，Mysql中自增ID的值在一定条件下会回退！因此导致自增主键有重复导，外键关联失效引起。</p>
-<p>我们来举个例子说明一下具体的现象：<br>例如，创建一个个InNoDB引擎表:<br><pre><code>CREATE TABLE `bsession`  (
-    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `aname` varchar(80) NOT NULL DEFAULT ‘’,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;</code></pre></p>
-<p>创建数据表之后，我们来插入一些数据来重现一下效果，插入 10条数据，<br><pre><code>INSERT INTO `bsession` (aname) values (&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a’);</code></pre></p>
-<p>接下来，再删除最后的几条数据，看看id的变化是怎样的，<br><pre><code>DELETE FROM bsession where id in (8,9,10);</code></pre></p>
-<p><img src="/img/2017-12-28/mysql_innodb_auto_increment1.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p>
-<p>在删除部分数据之后表中的仅有7条，且最大的’id’ = 7, 现在进行数据库重启，并重新插入10条数据，我们验证一下自增列从8还是11开始自增计数，<br>看下图的数据变化，注意：id列的增长情况</p>
-<p><img src="/img/2017-12-28/mysql_innodb_auto_increment2.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p>
-<p> 结果事实证明，自增列 id 的值出现了回滚，不是从11开始计数生成新纪录，而是继续了表中最大id，从8开始计数。<br> 说到这里肯定有人要问了是什么原因导致 自增属性字段，在重启后会回退呢？<br> 根据现象猜测大致原因如下：<br> <em>InNoDB的存储引擎是将AUTO_INCREMENT计数器的累计值存放到主内存中的;
- </em>大概是为了计数器的频繁跟新，为了保证速速并非存入硬盘文件，<br> *因为内存存储，当重启后内存数据就丢失了，启动后计数器的值只好从表中MAX(自增字段)来获取当前最大计数器值</p>
-<p>要了解真实的原因以及进一步确认MySql的InnoDB引擎是如何处理自增列的，翻看查看官方文档找到了如下内容：<br><blockquote><p><img src="/img/2017-12-28/mysql_innodb_auto_increment3.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p>
-<footer><strong>AUTO_INCREMENT Handling in InnoDB</strong><cite><a href="https://dev.mysql.com/doc/refman/5.7/en/innodb-auto-increment-handling.html" target="_blank" rel="noopener">MySQL 5.7 Reference Manual</a></cite></footer></blockquote></p>
-<p>查阅了不同版本的官方手册确认了截止Mysql 5.7 所有版本都存在这个问题，不过这个特性将在Mysql的下一个版本8.0中更改。<br>自增计数器每次更改时，当前的最大自增计数器值将会被写入redo log中，并保存到InnoDB引擎的私有系统表中，记录到每个检查点， 实现自增计数器的持久化，重启后值会保持一致。</p>
-<p>当服器在Crash中恢复后，重启过程中InnoDB使用存储在系统字典表里的当前最大自增，并且从最后一个检查点开始扫描RedoLog中的计数器值。如果Redo Log中的值大于内存中的计数器值，Redo Log中的值将会被采用。</p>
-<p>关于后续版本中对于 自增列的处理机制的更详细说明，请查看官方文档，这里不在赘述。<br><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-auto-increment-handling.html" title="[external] [MySQL 8.0 Reference Manual]" target="_blank" rel="noopener">InnoDB AUTO_INCREMENT Lock Modes</a></p>
+                <h1 id="什么是CGI："><a href="#什么是CGI：" class="headerlink" title="什么是CGI："></a>什么是CGI：</h1><p>通用网关接口，是WebServer和外部程序之间的通讯协议。早期的WebServer是只处理静态内容的，但是随着WWW的发展交互性要求越来越强，出现了各种动态处理语言实现复杂的功能。Web端的业务逻辑越来越复杂将这些都交给WebServer处理不现实，而且各种编程语言各自独立且有各自的知识产权，因此就出现了CGI协议，它使WebServers把复杂的逻辑交给各编程语言。</p>
+<p>CGI的好处就是使WebServer完全独立于语言，仅仅是做为中间接口协议，链接WebServer和外部程序。他们通过cgi搭线来完成数据传递。这样做的好处是尽量减少2个的关联，使他们2变得更独立。CGI可以用任何编程语言编写，只要这种语言具有标准输入、输出和环境变量，例如：perl、PHP等。事实上第一个CGI实现就是用Perl[‘pə:l]写的。</p>
+<h2 id="原理流程："><a href="#原理流程：" class="headerlink" title="原理流程："></a>原理流程：</h2><ul>
+<li>1、客户端访问一个地址，通过HTTP协议发送请求（GET/POST/PUT/DELTE etc.）给WebServer。</li>
+<li>2、WebServer会Fork一个子进程，将请求描述信息通过标准输入STDIN和环境变量传给CGI程序。</li>
+<li>3、启动CGI外部程序处理请求，处理结果通过标准输出STDOUT返回给WebServer子进程，并结束和销毁相关资源。</li>
+<li>4、有WebServer子进程通过HTTP协议将数据返回给客户端。</li>
+<li>5、通常Web服务器使用*unix Shell环境变量来保存参数和环境变量。</li>
+</ul>
+<p><img src="/img/2018-02/cgi.jpg" alt="&quot;流程图如图示&quot;"></p>
+<h2 id="CGI有个致命的弱点："><a href="#CGI有个致命的弱点：" class="headerlink" title="CGI有个致命的弱点："></a>CGI有个致命的弱点：</h2><p>每一个请求都会fork一个CGI进程处理，也就是最为人诟病的Fork-And-Execute模式，所以性能低下。</p>
+<h1 id="什么是FastCGI"><a href="#什么是FastCGI" class="headerlink" title="什么是FastCGI:"></a>什么是FastCGI:</h1><p>FastCGI是Web服务器和处理程序之间通信的一种协议， 是CGI的一种改进方案，FastCGI像是一个常驻(long-lived)型的CGI， 它可以一直执行，在请求到达时不会花费时间去fork一个进程来处理(这是CGI最为人诟病的fork-and-execute模式)。 因为是通信协议可以通过Socket通讯，所以它还支持分布式的运算， FastCGI 程序可以在网站服务器以外的主机上执行，并且可以接受来自其它网站服务器的请求。FastCGI 是与语言无关的、可伸缩架构的 CGI 开放扩展，主要特点是将 CGI 解释器进程保持在内存中，不需要反复fork，以此获得较高的性能。 CGI 程序反复加载是CGI性能低下的主要原因，如果 CGI 程序保持在内存中并接受 FastCGI 进程管理器调度， 则可以提供良好的性能、伸缩性、Fail-Over 特性等。</p>
+<h2 id="原理："><a href="#原理：" class="headerlink" title="原理："></a>原理：</h2><ul>
+<li>1.WebServer启动时载入FastCGI进程管理器，IIS的ISAPI，Apache的Mod_PHP，Nginx借助PHP-FPM</li>
+<li>2.FastCGI进程管理器自身初始化（解析PHP.ini以及环境变量等），启动多个子进程/CGI解析器，等待webServer的链接。</li>
+<li>3.客户端请求到达Web Server时，FastCGI解释器选择并链接到一个子进程(PHP-FPM或PHP-CGI)，将标准输入和环境变量发送给子进程。</li>
+<li>4.FastCGI子进程处理后将标准输出和错误信息从同一连接返回WebServer，当FastCGI子进程关闭连接时 请求处理便完成了。</li>
+<li>5.CGI下这时进程退出了，但是FastCGI该子进程会继续运行并等待下一个连接请求。<br>  CGI中每一个请求，PHP都必须重新初始化PHP.ini，载入扩展或者dll并重初始化所有环境变量等。<br>  FastCGI只有在进程启动时做一次，之后便一直运行，这有另外一个好处就是可以使用外部数据的长连接模式。</li>
+</ul>
+<h1 id="PHP-CGI"><a href="#PHP-CGI" class="headerlink" title="PHP-CGI:"></a>PHP-CGI:</h1><p>是php官方出品的fastcgi管理器，不支持平滑重启，改了php.ini就要kill掉原来的php-cgi再重新启动才能生效；不支持动态worker调度，只能一开始指定要起几个worker。</p>
+<h1 id="PHP-FPM"><a href="#PHP-FPM" class="headerlink" title="PHP-FPM:"></a>PHP-FPM:</h1><p>FPM(FastCGI Process Manager)是PHP FastCGI运行模式的一个进程管理器，但是在早期他只是是PHP的一个扩展，PHP 5.3.3合并到主分支。加入了动态调度功能，可以根据请求来访压力变化动态增减worker进程数量；支持reload指令，让worker进程在完成当前请求后重启，并应用php.ini新配置。</p>
+<p>FPM的核心功能是进程管理，那么它用来管理什么进程呢？这个就需要从FastCGI说起了。</p>
+<p>FastCGI前面有详细的介绍了，注意：它只是一种协议！PHP是一个脚本解析器，你可以把它理解为一个普通的函数，输入是PHP脚本；输出是执行结果，相对于WebServer来说他就是一个外部程序处理动态请求。</p>
+<p>在网络应用场景下，PHP需要接收请求、解析协议，然后处理完成返回请求，然而PHP并没有像Golang那样实现http网络库，而是实现了FastCGI协议，然后与web服务器配合实现http的处理。借助于web服务器来解析http请求，然后将解析的结果再通过FastCGI协议转发给PHP处理程序，PHP处理完成后将结果返回给web服务器，web服务器再返回给用户。</p>
+<p><img src="/img/2018-02/fastcgi.png" alt="&quot;FastCGI流程图如图示&quot;"></p>
+<p>通常程序处理模型有两种：多进程、多线程。</p>
+<p>PHP本身不支持多线程，要实现多线程需要借助于其他第三方扩展来实现，对于PHP来说通常采用多进程模型。多进程模型通常是主进程只负责管理子进程，而基本事件由各个子进程处理，nginx、fpm就是这种模式；另一种多线程模型与多进程类似，只是它是线程粒度，通常会由主线程监听、接收请求，然后交由子线程处理，例如，Java，C++等都是支持多线程的。</p>
+<p>概括来说，fpm就是创建一个master进程，在master进程中创建并监听socket，然后fork出多个子进程，这些子进程各自accept请求，子进程的处理非常简单，它在启动后阻塞在accept上，有请求到达后开始读取请求数据，读取完成后开始处理然后再返回，在这期间是不会接收其它请求的，也就是说fpm的子进程同时只能响应一个请求，只有把这个请求处理完成后才会accept下一个请求，这一点与nginx的事件驱动有很大的区别，nginx的子进程通过epoll管理套接字，如果一个请求数据还未发送完成则会处理下一个请求，即一个进程会同时连接多个请求，它是非阻塞的模型，只处理活跃的套接字。</p>
+<p>fpm的master进程与worker进程之间不会直接进行通信，master通过共享内存获取worker进程的信息，比如worker进程当前状态、已处理请求数等，当master进程要杀掉一个worker进程时则通过发送信号的方式通知worker进程。fpm可以同时监听多个端口，每个端口对应一个worker pool，而每个pool下对应多个worker进程，类似nginx中server概念。</p>
+<p><img src="/img/2018-02/worker_pool.png" alt="&quot;PHP-FPM Worker Poll&quot;"></p>
+<p>在php-fpm.conf中通过[pool name]声明一个worker pool：<br><pre><code>[web1]
+listen = 127.0.0.1:9000
+...
+
+[web2]
+listen = 127.0.0.1:9001
+...
+启动fpm后查看进程：ps -aux|grep fpm
+
+root     27155  0.0  0.1 144704  2720 ?        Ss   15:16   0:00 php-fpm: master process (&#x2F;usr&#x2F;local&#x2F;php7&#x2F;etc&#x2F;php-fpm.conf)
+nobody   27156  0.0  0.1 144676  2416 ?        S    15:16   0:00 php-fpm: pool web1
+nobody   27157  0.0  0.1 144676  2416 ?        S    15:16   0:00 php-fpm: pool web1
+nobody   27159  0.0  0.1 144680  2376 ?        S    15:16   0:00 php-fpm: pool web2
+nobody   27160  0.0  0.1 144680  2376 ?        S    15:16   0:00 php-fpm: pool web2
+</code></pre></p>
 
             </div>
             <hr>
@@ -508,7 +539,7 @@
                     </span>
                     <a href="http://sawyersoft.github.io" class="b-link-green">Blogs of Sawyer.Lee</a>
                     <i class="fa fa-angle-right fa-lg fa-fw text-color"></i>
-                    <a href="/2017/12/28/mysql-auto-increment/" class="b-link-green">用自增主键无数遍，但你真懂InnoDB自增吗？</a>
+                    <a href="/2019/02/25/CGI和FastCGI-以及PHP的实现/" class="b-link-green">CGI，FastCGI以及PHP的实现</a>
                 </p>
             </div>
         </div>
@@ -531,7 +562,8 @@
         
         <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fa fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="fa fa-dot-circle-o"></i>&nbsp;本篇
+            </div>
             <div class="card">
                 <a href="/2019/02/25/CGI和FastCGI-以及PHP的实现/">
                     <div class="card-image">
@@ -545,9 +577,9 @@
                 <div class="card-content article-content">
                     <div class="summary">什么是CGI：通用网关接口，是WebServer和外部程序之间的通讯协议。早期的WebServer是只处理静态内容的，但是随着WWW的发展交互性要求越来越强，出现了各种动态处理语言实现复杂的功能。Web端的业务逻辑越来越复杂将这些都交给We</div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="fa fa-clock-o fa-fw icon-date"></i>2019-02-25
-                        </span>
+                            <span class="publish-date">
+                                <i class="fa fa-clock-o fa-fw icon-date"></i>2019-02-25
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fa fa-bookmark fa-fw icon-category"></i>
@@ -560,6 +592,7 @@
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
@@ -594,28 +627,29 @@
                 下一篇&nbsp;<i class="fa fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2017/12/28/IT职业规划/">
+                <a href="/2017/12/28/mysql-auto-increment/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="IT从业人的职业规划">
+                        <img src="/medias/featureimages/19.jpg" class="responsive-img" alt="用自增主键无数遍，但你真懂InnoDB自增吗？">
                         
-                        <span class="card-title">IT从业人的职业规划</span>
+                        <span class="card-title">用自增主键无数遍，但你真懂InnoDB自增吗？</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
-                    <div class="summary">当你对某种技能已经有了一定的了解，开始觉得自己如同“行尸走肉”，成为一个开发工具的时候，那就应该要明确一下自己的发展方向了。
-某位技术大牛Sawyer.Lee
-从大的方向来说基本三个大方向单方面技术发展方向：
-技术大牛方向：1、精通PHP,</div>
+                    <div class="summary">在一次宕机之后重启Mysql服务器并恢复数据的过程中发现了自增主键列的自增数值会回退，导致有数据上有冲突。经过一番的排查之后发现了一个非常容易被忽略的事实，Mysql中自增ID的值在一定条件下会回退！因此导致自增主键有重复导，外键关联失效引</div>
                     <div class="publish-info">
                             <span class="publish-date">
                                 <i class="fa fa-clock-o fa-fw icon-date"></i>2017-12-28
                             </span>
                         <span class="publish-author">
                             
-                            <i class="fa fa-user fa-fw"></i>
-                            shyeus@gmail.com
+                            <i class="fa fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/数据库/" class="post-category" target="_blank">
+                                    数据库
+                                </a>
+                            
                             
                         </span>
                     </div>
@@ -623,12 +657,20 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/IT行业/" target="_blank">
-                        <span class="chip text-color">IT行业</span>
+                    <a href="/tags/mysql/" target="_blank">
+                        <span class="chip text-color">mysql</span>
                     </a>
                     
-                    <a href="/tags/职业规划/" target="_blank">
-                        <span class="chip text-color">职业规划</span>
+                    <a href="/tags/InnoDB/" target="_blank">
+                        <span class="chip text-color">InnoDB</span>
+                    </a>
+                    
+                    <a href="/tags/auto-increment/" target="_blank">
+                        <span class="chip text-color">auto_increment</span>
+                    </a>
+                    
+                    <a href="/tags/自增/" target="_blank">
+                        <span class="chip text-color">自增</span>
                     </a>
                     
                 </div>

@@ -584,27 +584,33 @@
                 下一篇&nbsp;<i class="fa fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2016/12/28/php-Generators/">
+                <a href="/2017/02/20/Redis管道提升操作性能/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="PHP 生成器 可以做什么？">
+                        <img src="/medias/featureimages/2.jpg" class="responsive-img" alt="使用Redis管道提升批量操作性能">
                         
-                        <span class="card-title">PHP 生成器 可以做什么？</span>
+                        <span class="card-title">使用Redis管道提升批量操作性能</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
-                    <div class="summary">生成器 “generators” 的概念是在 PHP 5.5.0 版本新提出的重要新特性之一。这应该是一个很强大的工具，但似乎很多PHPer并不熟悉这个概念，更谈不上应用它。所以我认为需要花点时间来解释一下它是如何工作的以及如何充分的利用他</div>
+                    <div class="summary">#简介
+
+最近在工作中使用了Redis的管道技术。
+发现对于互不相关的多次Redis操作使用管道可以极大的提升性能。
+特此记录。#浅析
+个人觉得问题可能出在TCP连接上。
+Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量</div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="fa fa-clock-o fa-fw icon-date"></i>2016-12-28
+                                <i class="fa fa-clock-o fa-fw icon-date"></i>2017-02-20
                             </span>
                         <span class="publish-author">
                             
                             <i class="fa fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/PHP/" class="post-category" target="_blank">
-                                    PHP
+                            <a href="/categories/Redis/" class="post-category" target="_blank">
+                                    Redis
                                 </a>
                             
                             
@@ -618,16 +624,16 @@
                         <span class="chip text-color">PHP</span>
                     </a>
                     
-                    <a href="/tags/迭代器/" target="_blank">
-                        <span class="chip text-color">迭代器</span>
+                    <a href="/tags/Redis/" target="_blank">
+                        <span class="chip text-color">Redis</span>
                     </a>
                     
-                    <a href="/tags/生成器/" target="_blank">
-                        <span class="chip text-color">生成器</span>
+                    <a href="/tags/管道/" target="_blank">
+                        <span class="chip text-color">管道</span>
                     </a>
                     
-                    <a href="/tags/yield/" target="_blank">
-                        <span class="chip text-color">yield</span>
+                    <a href="/tags/性能提升/" target="_blank">
+                        <span class="chip text-color">性能提升</span>
                     </a>
                     
                 </div>

@@ -5,8 +5,14 @@
 
 <head><meta name="generator" content="Hexo 3.8.0">
     <meta charset="utf-8">
-    <meta name="keywords" content="用自增主键无数遍，但你真懂InnoDB自增吗？, Blogs of Sawyer.Lee">
-    <meta name="description" content="在一次宕机之后重启Mysql服务器并恢复数据的过程中发现了自增主键列的自增数值会回退，导致有数据上有冲突。经过一番的排查之后发现了一个非常容易被忽略的事实，Mysql中自增ID的值在一定条件下会回退！因此导致自增主键有重复导，外键关联失效引">
+    <meta name="keywords" content="使用Redis管道提升批量操作性能, Blogs of Sawyer.Lee">
+    <meta name="description" content="#简介
+
+最近在工作中使用了Redis的管道技术。
+发现对于互不相关的多次Redis操作使用管道可以极大的提升性能。
+特此记录。#浅析
+个人觉得问题可能出在TCP连接上。
+Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -14,7 +20,7 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>用自增主键无数遍，但你真懂InnoDB自增吗？ | Blogs of Sawyer.Lee</title>
+    <title>使用Redis管道提升批量操作性能 | Blogs of Sawyer.Lee</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/font-awesome.min.css">
@@ -278,13 +284,13 @@
 
 
 
-<div class="bg-cover post-cover" style="background-image: url('/medias/featureimages/19.jpg')">
+<div class="bg-cover post-cover" style="background-image: url('/medias/featureimages/2.jpg')">
     <div class="container">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
                     <div class="description center-align post-title">
-                        用自增主键无数遍，但你真懂InnoDB自增吗？
+                        使用Redis管道提升批量操作性能
                     </div>
                 </div>
             </div>
@@ -306,20 +312,20 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/mysql/" target="_blank">
-                                <span class="chip text-color">mysql</span>
+                            <a href="/tags/PHP/" target="_blank">
+                                <span class="chip text-color">PHP</span>
                             </a>
                         
-                            <a href="/tags/InnoDB/" target="_blank">
-                                <span class="chip text-color">InnoDB</span>
+                            <a href="/tags/Redis/" target="_blank">
+                                <span class="chip text-color">Redis</span>
                             </a>
                         
-                            <a href="/tags/auto-increment/" target="_blank">
-                                <span class="chip text-color">auto_increment</span>
+                            <a href="/tags/管道/" target="_blank">
+                                <span class="chip text-color">管道</span>
                             </a>
                         
-                            <a href="/tags/自增/" target="_blank">
-                                <span class="chip text-color">自增</span>
+                            <a href="/tags/性能提升/" target="_blank">
+                                <span class="chip text-color">性能提升</span>
                             </a>
                         
                     </div>
@@ -330,8 +336,8 @@
                     <div class="post-cate">
                         <i class="fa fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/数据库/" class="post-category" target="_blank">
-                                数据库
+                            <a href="/categories/Redis/" class="post-category" target="_blank">
+                                Redis
                             </a>
                         
                     </div>
@@ -342,7 +348,7 @@
             <div class="post-info">
                 <div class="post-date info-break-policy">
                     <i class="fa fa-calendar-minus-o fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2017-12-28
+                    2017-02-20
                 </div>
 
                 
@@ -358,24 +364,56 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>在一次宕机之后重启Mysql服务器并恢复数据的过程中发现了自增主键列的自增数值会回退，导致有数据上有冲突。<br>经过一番的排查之后发现了一个非常容易被忽略的事实，Mysql中自增ID的值在一定条件下会回退！因此导致自增主键有重复导，外键关联失效引起。</p>
-<p>我们来举个例子说明一下具体的现象：<br>例如，创建一个个InNoDB引擎表:<br><pre><code>CREATE TABLE `bsession`  (
-    `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-    `aname` varchar(80) NOT NULL DEFAULT ‘’,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8;</code></pre></p>
-<p>创建数据表之后，我们来插入一些数据来重现一下效果，插入 10条数据，<br><pre><code>INSERT INTO `bsession` (aname) values (&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a&#39;),(&#39;a’);</code></pre></p>
-<p>接下来，再删除最后的几条数据，看看id的变化是怎样的，<br><pre><code>DELETE FROM bsession where id in (8,9,10);</code></pre></p>
-<p><img src="/img/2017-12-28/mysql_innodb_auto_increment1.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p>
-<p>在删除部分数据之后表中的仅有7条，且最大的’id’ = 7, 现在进行数据库重启，并重新插入10条数据，我们验证一下自增列从8还是11开始自增计数，<br>看下图的数据变化，注意：id列的增长情况</p>
-<p><img src="/img/2017-12-28/mysql_innodb_auto_increment2.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p>
-<p> 结果事实证明，自增列 id 的值出现了回滚，不是从11开始计数生成新纪录，而是继续了表中最大id，从8开始计数。<br> 说到这里肯定有人要问了是什么原因导致 自增属性字段，在重启后会回退呢？<br> 根据现象猜测大致原因如下：<br> <em>InNoDB的存储引擎是将AUTO_INCREMENT计数器的累计值存放到主内存中的;
- </em>大概是为了计数器的频繁跟新，为了保证速速并非存入硬盘文件，<br> *因为内存存储，当重启后内存数据就丢失了，启动后计数器的值只好从表中MAX(自增字段)来获取当前最大计数器值</p>
-<p>要了解真实的原因以及进一步确认MySql的InnoDB引擎是如何处理自增列的，翻看查看官方文档找到了如下内容：<br><blockquote><p><img src="/img/2017-12-28/mysql_innodb_auto_increment3.jpg" alt="&quot;更新数据后数据变化情况&quot;"></p>
-<footer><strong>AUTO_INCREMENT Handling in InnoDB</strong><cite><a href="https://dev.mysql.com/doc/refman/5.7/en/innodb-auto-increment-handling.html" target="_blank" rel="noopener">MySQL 5.7 Reference Manual</a></cite></footer></blockquote></p>
-<p>查阅了不同版本的官方手册确认了截止Mysql 5.7 所有版本都存在这个问题，不过这个特性将在Mysql的下一个版本8.0中更改。<br>自增计数器每次更改时，当前的最大自增计数器值将会被写入redo log中，并保存到InnoDB引擎的私有系统表中，记录到每个检查点， 实现自增计数器的持久化，重启后值会保持一致。</p>
-<p>当服器在Crash中恢复后，重启过程中InnoDB使用存储在系统字典表里的当前最大自增，并且从最后一个检查点开始扫描RedoLog中的计数器值。如果Redo Log中的值大于内存中的计数器值，Redo Log中的值将会被采用。</p>
-<p>关于后续版本中对于 自增列的处理机制的更详细说明，请查看官方文档，这里不在赘述。<br><a href="https://dev.mysql.com/doc/refman/8.0/en/innodb-auto-increment-handling.html" title="[external] [MySQL 8.0 Reference Manual]" target="_blank" rel="noopener">InnoDB AUTO_INCREMENT Lock Modes</a></p>
+                <p>#简介</p>
+<ol>
+<li>最近在工作中使用了Redis的管道技术。</li>
+<li>发现对于互不相关的多次Redis操作使用管道可以极大的提升性能。</li>
+<li>特此记录。<br>#浅析</li>
+<li>个人觉得问题可能出在TCP连接上。</li>
+<li>Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量的时间消耗在TCP握手上。</li>
+<li>而管道可以合并多次TCP请求，统一发送，这样就可以节省大量的时间。<br>#代码示例<br>##初始化Redis连接</li>
+<li>使用phpredis扩展，初始化Redis连接。</li>
+<li>代码略。<br>##获取毫秒数时间<pre><code>1. function getMillisecond() { 
+2.     list($s1, $s2) = explode(&#39; &#39;, microtime()); 
+3.     return (float)sprintf(&#39;%.0f&#39;, (floatval($s1) + floatval($s2)) * 1000); 
+4. } </code></pre>
+##不使用事务 代码段：<pre><code>1. $sTime = getMillisecond();
+2. for ($i = 0; $i &lt; 10000; $i++) {
+3.     $this-&gt;redis-&gt;set(&#39;Test:test&#39; . $i,&#39;test&#39;);
+4. }
+5. $eTime = getMillisecond();
+6. var_dump($eTime - $sTime);</code></pre>
+##结果（多次）：</li>
+<li>float(3199)</li>
+<li>float(3145)</li>
+<li>float(3436)<br>##使用参数为MULTI的一般事务 代码段：<pre><code>1. $sTime = getMillisecond();
+2. $this-&gt;redis-&gt;multi(Redis::MULTI);
+3. for ($i = 0; $i &lt; 10000; $i++) {
+4.     $this-&gt;redis-&gt;set(&#39;Test:test&#39; . $i,&#39;test&#39;);
+5. }
+6. $this-&gt;redis-&gt;exec();
+7. $eTime = getMillisecond();
+8. var_dump($eTime - $sTime);</code></pre>
+##结果（多次）：</li>
+<li>float(3160)</li>
+<li>float(3410)</li>
+<li>float(3093)<br>##使用参数为PIPELINE的管道事务 代码段：<pre><code>1. $sTime = getMillisecond();
+2. $this-&gt;redis-&gt;multi(Redis::PIPELINE);
+3. for ($i = 0; $i &lt; 10000; $i++) {
+4.     $this-&gt;redis-&gt;set(&#39;Test:test&#39; . $i,&#39;test&#39;);
+5. }
+6. $this-&gt;redis-&gt;exec();
+7. $eTime = getMillisecond();
+8. var_dump($eTime - $sTime);</code></pre>
+##结果（多次）：</li>
+<li>float(42)</li>
+<li>float(44)</li>
+<li>float(49)<br>#初步结论</li>
+<li>由测试结果可以看出，管道技术由于合并了多次请求，可以有效的减少执行时间，加快效率。</li>
+<li>而一般型的事务可能只是把所有命令做了一个队列并依次发送，并没有合并请求。<br>#备注</li>
+<li>以上结果目前只适用于PHP语言的phpredis扩展。</li>
+<li>不过可以推测在其他场景下使用管道应该也可以提升效率。待测试。</li>
+</ol>
 
             </div>
             <hr>
@@ -508,7 +546,7 @@
                     </span>
                     <a href="http://sawyersoft.github.io" class="b-link-green">Blogs of Sawyer.Lee</a>
                     <i class="fa fa-angle-right fa-lg fa-fw text-color"></i>
-                    <a href="/2017/12/28/mysql-auto-increment/" class="b-link-green">用自增主键无数遍，但你真懂InnoDB自增吗？</a>
+                    <a href="/2017/02/20/Redis管道提升操作性能/" class="b-link-green">使用Redis管道提升批量操作性能</a>
                 </p>
             </div>
         </div>
@@ -533,21 +571,69 @@
             <div class="article-badge left-badge text-color">
                 <i class="fa fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2019/02/25/CGI和FastCGI-以及PHP的实现/">
+                <a href="/2017/12/28/IT职业规划/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/13.jpg" class="responsive-img" alt="CGI，FastCGI以及PHP的实现">
+                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="IT从业人的职业规划">
                         
-                        <span class="card-title">CGI，FastCGI以及PHP的实现</span>
+                        <span class="card-title">IT从业人的职业规划</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
-                    <div class="summary">什么是CGI：通用网关接口，是WebServer和外部程序之间的通讯协议。早期的WebServer是只处理静态内容的，但是随着WWW的发展交互性要求越来越强，出现了各种动态处理语言实现复杂的功能。Web端的业务逻辑越来越复杂将这些都交给We</div>
+                    <div class="summary">当你对某种技能已经有了一定的了解，开始觉得自己如同“行尸走肉”，成为一个开发工具的时候，那就应该要明确一下自己的发展方向了。
+某位技术大牛Sawyer.Lee
+从大的方向来说基本三个大方向单方面技术发展方向：
+技术大牛方向：1、精通PHP,</div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="fa fa-clock-o fa-fw icon-date"></i>2019-02-25
+                            <i class="fa fa-clock-o fa-fw icon-date"></i>2017-12-28
                         </span>
+                        <span class="publish-author">
+                            
+                            <i class="fa fa-user fa-fw"></i>
+                            shyeus@gmail.com
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/IT行业/" target="_blank">
+                        <span class="chip text-color">IT行业</span>
+                    </a>
+                    
+                    <a href="/tags/职业规划/" target="_blank">
+                        <span class="chip text-color">职业规划</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fa fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2016/12/28/php-Generators/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="PHP 生成器 可以做什么？">
+                        
+                        <span class="card-title">PHP 生成器 可以做什么？</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary">生成器 “generators” 的概念是在 PHP 5.5.0 版本新提出的重要新特性之一。这应该是一个很强大的工具，但似乎很多PHPer并不熟悉这个概念，更谈不上应用它。所以我认为需要花点时间来解释一下它是如何工作的以及如何充分的利用他</div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="fa fa-clock-o fa-fw icon-date"></i>2016-12-28
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fa fa-bookmark fa-fw icon-category"></i>
@@ -567,68 +653,16 @@
                         <span class="chip text-color">PHP</span>
                     </a>
                     
-                    <a href="/tags/CGI/" target="_blank">
-                        <span class="chip text-color">CGI</span>
+                    <a href="/tags/迭代器/" target="_blank">
+                        <span class="chip text-color">迭代器</span>
                     </a>
                     
-                    <a href="/tags/FastCGI/" target="_blank">
-                        <span class="chip text-color">FastCGI</span>
+                    <a href="/tags/生成器/" target="_blank">
+                        <span class="chip text-color">生成器</span>
                     </a>
                     
-                    <a href="/tags/PHP-FPM/" target="_blank">
-                        <span class="chip text-color">PHP-FPM</span>
-                    </a>
-                    
-                    <a href="/tags/PHP-CGI/" target="_blank">
-                        <span class="chip text-color">PHP-CGI</span>
-                    </a>
-                    
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fa fa-chevron-right"></i>
-            </div>
-            <div class="card">
-                <a href="/2017/12/28/IT职业规划/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="IT从业人的职业规划">
-                        
-                        <span class="card-title">IT从业人的职业规划</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary">当你对某种技能已经有了一定的了解，开始觉得自己如同“行尸走肉”，成为一个开发工具的时候，那就应该要明确一下自己的发展方向了。
-某位技术大牛Sawyer.Lee
-从大的方向来说基本三个大方向单方面技术发展方向：
-技术大牛方向：1、精通PHP,</div>
-                    <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="fa fa-clock-o fa-fw icon-date"></i>2017-12-28
-                            </span>
-                        <span class="publish-author">
-                            
-                            <i class="fa fa-user fa-fw"></i>
-                            shyeus@gmail.com
-                            
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/IT行业/" target="_blank">
-                        <span class="chip text-color">IT行业</span>
-                    </a>
-                    
-                    <a href="/tags/职业规划/" target="_blank">
-                        <span class="chip text-color">职业规划</span>
+                    <a href="/tags/yield/" target="_blank">
+                        <span class="chip text-color">yield</span>
                     </a>
                     
                 </div>
