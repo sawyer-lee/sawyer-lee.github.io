@@ -5,8 +5,10 @@
 
 <head><meta name="generator" content="Hexo 3.8.0">
     <meta charset="utf-8">
-    <meta name="keywords" content="CGI，FastCGI以及PHP的实现, Blogs of Sawyer.Lee">
-    <meta name="description" content="什么是CGI：通用网关接口，是WebServer和外部程序之间的通讯协议。早期的WebServer是只处理静态内容的，但是随着WWW的发展交互性要求越来越强，出现了各种动态处理语言实现复杂的功能。Web端的业务逻辑越来越复杂将这些都交给We">
+    <meta name="keywords" content="Top和strace 查看某些或者某个进程, Blogs of Sawyer.Lee">
+    <meta name="description" content="Top 查看某些或者某个进程（top -p pid）
+top中使用CPU或MEM排序，还是看不到我们想了解的进程的相关信息；这时就可以指定对某个或某些进程进行TOP信息显示；
+1、查看某个进程的信息例：mysqld的信息(1)得到mysql">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -14,7 +16,7 @@
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>CGI，FastCGI以及PHP的实现 | Blogs of Sawyer.Lee</title>
+    <title>Top和strace 查看某些或者某个进程 | Blogs of Sawyer.Lee</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/font-awesome.min.css">
@@ -278,13 +280,13 @@
 
 
 
-<div class="bg-cover post-cover" style="background-image: url('/medias/featureimages/13.jpg')">
+<div class="bg-cover post-cover" style="background-image: url('/medias/featureimages/15.jpg')">
     <div class="container">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
                     <div class="description center-align post-title">
-                        CGI，FastCGI以及PHP的实现
+                        Top和strace 查看某些或者某个进程
                     </div>
                 </div>
             </div>
@@ -306,24 +308,24 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/PHP/" target="_blank">
-                                <span class="chip text-color">PHP</span>
+                            <a href="/tags/mysql/" target="_blank">
+                                <span class="chip text-color">mysql</span>
                             </a>
                         
-                            <a href="/tags/CGI/" target="_blank">
-                                <span class="chip text-color">CGI</span>
+                            <a href="/tags/linux/" target="_blank">
+                                <span class="chip text-color">linux</span>
                             </a>
                         
-                            <a href="/tags/FastCGI/" target="_blank">
-                                <span class="chip text-color">FastCGI</span>
+                            <a href="/tags/Top/" target="_blank">
+                                <span class="chip text-color">Top</span>
                             </a>
                         
-                            <a href="/tags/PHP-FPM/" target="_blank">
-                                <span class="chip text-color">PHP-FPM</span>
+                            <a href="/tags/strace/" target="_blank">
+                                <span class="chip text-color">strace</span>
                             </a>
                         
-                            <a href="/tags/PHP-CGI/" target="_blank">
-                                <span class="chip text-color">PHP-CGI</span>
+                            <a href="/tags/mac/" target="_blank">
+                                <span class="chip text-color">mac</span>
                             </a>
                         
                     </div>
@@ -334,8 +336,8 @@
                     <div class="post-cate">
                         <i class="fa fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/PHP/" class="post-category" target="_blank">
-                                PHP
+                            <a href="/categories/数据库/" class="post-category" target="_blank">
+                                数据库
                             </a>
                         
                     </div>
@@ -346,7 +348,7 @@
             <div class="post-info">
                 <div class="post-date info-break-policy">
                     <i class="fa fa-calendar-minus-o fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2019-02-25
+                    2017-12-28
                 </div>
 
                 
@@ -362,51 +364,18 @@
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h1 id="什么是CGI："><a href="#什么是CGI：" class="headerlink" title="什么是CGI："></a>什么是CGI：</h1><p>通用网关接口，是WebServer和外部程序之间的通讯协议。早期的WebServer是只处理静态内容的，但是随着WWW的发展交互性要求越来越强，出现了各种动态处理语言实现复杂的功能。Web端的业务逻辑越来越复杂将这些都交给WebServer处理不现实，而且各种编程语言各自独立且有各自的知识产权，因此就出现了CGI协议，它使WebServers把复杂的逻辑交给各编程语言。</p>
-<p>CGI的好处就是使WebServer完全独立于语言，仅仅是做为中间接口协议，链接WebServer和外部程序。他们通过cgi搭线来完成数据传递。这样做的好处是尽量减少2个的关联，使他们2变得更独立。CGI可以用任何编程语言编写，只要这种语言具有标准输入、输出和环境变量，例如：perl、PHP等。事实上第一个CGI实现就是用Perl[‘pə:l]写的。</p>
-<h2 id="原理流程："><a href="#原理流程：" class="headerlink" title="原理流程："></a>原理流程：</h2><ul>
-<li>1、客户端访问一个地址，通过HTTP协议发送请求（GET/POST/PUT/DELTE etc.）给WebServer。</li>
-<li>2、WebServer会Fork一个子进程，将请求描述信息通过标准输入STDIN和环境变量传给CGI程序。</li>
-<li>3、启动CGI外部程序处理请求，处理结果通过标准输出STDOUT返回给WebServer子进程，并结束和销毁相关资源。</li>
-<li>4、有WebServer子进程通过HTTP协议将数据返回给客户端。</li>
-<li>5、通常Web服务器使用*unix Shell环境变量来保存参数和环境变量。</li>
-</ul>
-<p><img src="/img/2018-02/cgi.jpg" alt="&quot;流程图如图示&quot;"></p>
-<h2 id="CGI有个致命的弱点："><a href="#CGI有个致命的弱点：" class="headerlink" title="CGI有个致命的弱点："></a>CGI有个致命的弱点：</h2><p>每一个请求都会fork一个CGI进程处理，也就是最为人诟病的Fork-And-Execute模式，所以性能低下。</p>
-<h1 id="什么是FastCGI"><a href="#什么是FastCGI" class="headerlink" title="什么是FastCGI:"></a>什么是FastCGI:</h1><p>FastCGI是Web服务器和处理程序之间通信的一种协议， 是CGI的一种改进方案，FastCGI像是一个常驻(long-lived)型的CGI， 它可以一直执行，在请求到达时不会花费时间去fork一个进程来处理(这是CGI最为人诟病的fork-and-execute模式)。 因为是通信协议可以通过Socket通讯，所以它还支持分布式的运算， FastCGI 程序可以在网站服务器以外的主机上执行，并且可以接受来自其它网站服务器的请求。FastCGI 是与语言无关的、可伸缩架构的 CGI 开放扩展，主要特点是将 CGI 解释器进程保持在内存中，不需要反复fork，以此获得较高的性能。 CGI 程序反复加载是CGI性能低下的主要原因，如果 CGI 程序保持在内存中并接受 FastCGI 进程管理器调度， 则可以提供良好的性能、伸缩性、Fail-Over 特性等。</p>
-<h2 id="原理："><a href="#原理：" class="headerlink" title="原理："></a>原理：</h2><ul>
-<li>1.WebServer启动时载入FastCGI进程管理器，IIS的ISAPI，Apache的Mod_PHP，Nginx借助PHP-FPM</li>
-<li>2.FastCGI进程管理器自身初始化（解析PHP.ini以及环境变量等），启动多个子进程/CGI解析器，等待webServer的链接。</li>
-<li>3.客户端请求到达Web Server时，FastCGI解释器选择并链接到一个子进程(PHP-FPM或PHP-CGI)，将标准输入和环境变量发送给子进程。</li>
-<li>4.FastCGI子进程处理后将标准输出和错误信息从同一连接返回WebServer，当FastCGI子进程关闭连接时 请求处理便完成了。</li>
-<li>5.CGI下这时进程退出了，但是FastCGI该子进程会继续运行并等待下一个连接请求。<br>  CGI中每一个请求，PHP都必须重新初始化PHP.ini，载入扩展或者dll并重初始化所有环境变量等。<br>  FastCGI只有在进程启动时做一次，之后便一直运行，这有另外一个好处就是可以使用外部数据的长连接模式。</li>
-</ul>
-<h1 id="PHP-CGI"><a href="#PHP-CGI" class="headerlink" title="PHP-CGI:"></a>PHP-CGI:</h1><p>是php官方出品的fastcgi管理器，不支持平滑重启，改了php.ini就要kill掉原来的php-cgi再重新启动才能生效；不支持动态worker调度，只能一开始指定要起几个worker。</p>
-<h1 id="PHP-FPM"><a href="#PHP-FPM" class="headerlink" title="PHP-FPM:"></a>PHP-FPM:</h1><p>FPM(FastCGI Process Manager)是PHP FastCGI运行模式的一个进程管理器，但是在早期他只是是PHP的一个扩展，PHP 5.3.3合并到主分支。加入了动态调度功能，可以根据请求来访压力变化动态增减worker进程数量；支持reload指令，让worker进程在完成当前请求后重启，并应用php.ini新配置。</p>
-<p>FPM的核心功能是进程管理，那么它用来管理什么进程呢？这个就需要从FastCGI说起了。</p>
-<p>FastCGI前面有详细的介绍了，注意：它只是一种协议！PHP是一个脚本解析器，你可以把它理解为一个普通的函数，输入是PHP脚本；输出是执行结果，相对于WebServer来说他就是一个外部程序处理动态请求。</p>
-<p>在网络应用场景下，PHP需要接收请求、解析协议，然后处理完成返回请求，然而PHP并没有像Golang那样实现http网络库，而是实现了FastCGI协议，然后与web服务器配合实现http的处理。借助于web服务器来解析http请求，然后将解析的结果再通过FastCGI协议转发给PHP处理程序，PHP处理完成后将结果返回给web服务器，web服务器再返回给用户。</p>
-<p><img src="/img/2018-02/fastcgi.png" alt="&quot;FastCGI流程图如图示&quot;"></p>
-<p>通常程序处理模型有两种：多进程、多线程。</p>
-<p>PHP本身不支持多线程，要实现多线程需要借助于其他第三方扩展来实现，对于PHP来说通常采用多进程模型。多进程模型通常是主进程只负责管理子进程，而基本事件由各个子进程处理，nginx、fpm就是这种模式；另一种多线程模型与多进程类似，只是它是线程粒度，通常会由主线程监听、接收请求，然后交由子线程处理，例如，Java，C++等都是支持多线程的。</p>
-<p>概括来说，fpm就是创建一个master进程，在master进程中创建并监听socket，然后fork出多个子进程，这些子进程各自accept请求，子进程的处理非常简单，它在启动后阻塞在accept上，有请求到达后开始读取请求数据，读取完成后开始处理然后再返回，在这期间是不会接收其它请求的，也就是说fpm的子进程同时只能响应一个请求，只有把这个请求处理完成后才会accept下一个请求，这一点与nginx的事件驱动有很大的区别，nginx的子进程通过epoll管理套接字，如果一个请求数据还未发送完成则会处理下一个请求，即一个进程会同时连接多个请求，它是非阻塞的模型，只处理活跃的套接字。</p>
-<p>fpm的master进程与worker进程之间不会直接进行通信，master通过共享内存获取worker进程的信息，比如worker进程当前状态、已处理请求数等，当master进程要杀掉一个worker进程时则通过发送信号的方式通知worker进程。fpm可以同时监听多个端口，每个端口对应一个worker pool，而每个pool下对应多个worker进程，类似nginx中server概念。</p>
-<p><img src="/img/2018-02/worker_pool.png" alt="&quot;PHP-FPM Worker Poll&quot;"></p>
-<p>在php-fpm.conf中通过[pool name]声明一个worker pool：<br><pre><code>[web1]
-listen = 127.0.0.1:9000
-...
-
-[web2]
-listen = 127.0.0.1:9001
-...
-启动fpm后查看进程：ps -aux|grep fpm
-
-root     27155  0.0  0.1 144704  2720 ?        Ss   15:16   0:00 php-fpm: master process (&#x2F;usr&#x2F;local&#x2F;php7&#x2F;etc&#x2F;php-fpm.conf)
-nobody   27156  0.0  0.1 144676  2416 ?        S    15:16   0:00 php-fpm: pool web1
-nobody   27157  0.0  0.1 144676  2416 ?        S    15:16   0:00 php-fpm: pool web1
-nobody   27159  0.0  0.1 144680  2376 ?        S    15:16   0:00 php-fpm: pool web2
-nobody   27160  0.0  0.1 144680  2376 ?        S    15:16   0:00 php-fpm: pool web2
-</code></pre></p>
+                <p>Top 查看某些或者某个进程（top -p pid）</p>
+<p>top中使用CPU或MEM排序，还是看不到我们想了解的进程的相关信息；这时就可以指定对某个或某些进程进行TOP信息显示；</p>
+<p>1、查看某个进程的信息<br>例：mysqld的信息<br>(1)得到mysqld进程的pid<br>[root@6 ~]# pidof mysqld<br>21538</p>
+<p>(2)top指定查看PID<br>[root@6 ~]# top -p 21538</p>
+<p>top - 09:15:06 up 30 days, 53 min,  3 users,  load average: 0.07, 0.22, 0.23<br>Tasks:   1 total,   0 running,   1 sleeping,   0 stopped,   0 zombie<br>Cpu(s):  3.0%us,  6.9%sy,  0.2%ni, 89.4%id,  0.3%wa,  0.1%hi,  0.1%si,  0.0%st<br>Mem:   1035140k total,   994888k used,    40252k free,   383072k buffers<br>Swap:  2048248k total,       80k used,  2048168k free,   237456k cached</p>
+<p>  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND<br>21538 mysql     15   0  146m  21m 4372 S  0.0  2.1   3:03.84 mysqld</p>
+<p>2、查看某些进程的信息<br>例：mysqld/httpd的信息<br>(1)得到mysqld/httpd进程的pid<br>[root@6 ~]# pidof mysqld<br>21538</p>
+<p>[root@6 ~]# pidof httpd<br>31117 31116 31115 31114</p>
+<p>(2)top指定查看PID<br>[root@6 ~]# top -p 21538,31117,31116,31115,31114</p>
+<p>top - 09:20:05 up 30 days, 58 min,  3 users,  load average: 0.37, 0.24, 0.23<br>Tasks:   5 total,   0 running,   5 sleeping,   0 stopped,   0 zombie<br>Cpu(s):  3.0%us,  6.9%sy,  0.2%ni, 89.4%id,  0.3%wa,  0.1%hi,  0.1%si,  0.0%st<br>Mem:   1035140k total,   994364k used,    40776k free,   383404k buffers<br>Swap:  2048248k total,       80k used,  2048168k free,   237560k cached</p>
+<p>  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND<br>21538 mysql     15   0  146m  21m 4372 S  0.0  2.1   3:03.86 mysqld<br>31117 apache    15   0 60036 8428 4668 S  0.0  0.8   0:00.48 httpd<br>31116 apache    15   0 60308 9.9m 6288 S  0.0  1.0   0:00.48 httpd<br>31115 apache    15   0 60100 8552 4756 S  0.0  0.8   0:00.48 httpd<br>31114 apache    15   0 59892 6452 3060 S  0.0  0.6   0:00.41 httpd </p>
+<p>strace在linux下用来跟踪某个进程的系统调用，在solaris下，对应的是dtrace，在mac下，对应的命令是：dtruss。</p>
 
             </div>
             <hr>
@@ -539,7 +508,7 @@ nobody   27160  0.0  0.1 144680  2376 ?        S    15:16   0:00 php-fpm: pool w
                     </span>
                     <a href="http://sawyersoft.github.io" class="b-link-green">Blogs of Sawyer.Lee</a>
                     <i class="fa fa-angle-right fa-lg fa-fw text-color"></i>
-                    <a href="/2019/02/25/CGI和FastCGI-以及PHP的实现/" class="b-link-green">CGI，FastCGI以及PHP的实现</a>
+                    <a href="/2017/12/28/Top-commond-and-trace/" class="b-link-green">Top和strace 查看某些或者某个进程</a>
                 </p>
             </div>
         </div>
@@ -562,10 +531,9 @@ nobody   27160  0.0  0.1 144680  2376 ?        S    15:16   0:00 php-fpm: pool w
         
         <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fa fa-dot-circle-o"></i>&nbsp;本篇
-            </div>
+                <i class="fa fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2019/02/25/CGI和FastCGI-以及PHP的实现/">
+                <a href="/2019/02/25/CGI-FastCGI-And-PHP/">
                     <div class="card-image">
                         
                         
@@ -575,11 +543,11 @@ nobody   27160  0.0  0.1 144680  2376 ?        S    15:16   0:00 php-fpm: pool w
                     </div>
                 </a>
                 <div class="card-content article-content">
-                    <div class="summary">什么是CGI：通用网关接口，是WebServer和外部程序之间的通讯协议。早期的WebServer是只处理静态内容的，但是随着WWW的发展交互性要求越来越强，出现了各种动态处理语言实现复杂的功能。Web端的业务逻辑越来越复杂将这些都交给We</div>
+                    <div class="summary">什么是CGI：&emsp;&emsp;通用网关接口，是WebServer和外部程序之间的通讯协议。早期的WebServer是只处理静态内容的，但是随着WWW的发展交互性要求越来越强，出现了各种动态处理语言实现复杂的功能。Web端的业务逻辑越</div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="fa fa-clock-o fa-fw icon-date"></i>2019-02-25
-                            </span>
+                        <span class="publish-date">
+                            <i class="fa fa-clock-o fa-fw icon-date"></i>2019-02-25
+                        </span>
                         <span class="publish-author">
                             
                             <i class="fa fa-bookmark fa-fw icon-category"></i>
@@ -592,7 +560,6 @@ nobody   27160  0.0  0.1 144680  2376 ?        S    15:16   0:00 php-fpm: pool w
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     
