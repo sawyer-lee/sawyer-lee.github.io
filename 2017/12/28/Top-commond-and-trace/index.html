@@ -375,7 +375,11 @@ top中使用CPU或MEM排序，还是看不到我们想了解的进程的相关�
 <p>(2)top指定查看PID<br>[root@6 ~]# top -p 21538,31117,31116,31115,31114</p>
 <p>top - 09:20:05 up 30 days, 58 min,  3 users,  load average: 0.37, 0.24, 0.23<br>Tasks:   5 total,   0 running,   5 sleeping,   0 stopped,   0 zombie<br>Cpu(s):  3.0%us,  6.9%sy,  0.2%ni, 89.4%id,  0.3%wa,  0.1%hi,  0.1%si,  0.0%st<br>Mem:   1035140k total,   994364k used,    40776k free,   383404k buffers<br>Swap:  2048248k total,       80k used,  2048168k free,   237560k cached</p>
 <p>  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND<br>21538 mysql     15   0  146m  21m 4372 S  0.0  2.1   3:03.86 mysqld<br>31117 apache    15   0 60036 8428 4668 S  0.0  0.8   0:00.48 httpd<br>31116 apache    15   0 60308 9.9m 6288 S  0.0  1.0   0:00.48 httpd<br>31115 apache    15   0 60100 8552 4756 S  0.0  0.8   0:00.48 httpd<br>31114 apache    15   0 59892 6452 3060 S  0.0  0.6   0:00.41 httpd </p>
-<p>strace在linux下用来跟踪某个进程的系统调用，在solaris下，对应的是dtrace，在mac下，对应的命令是：dtruss。</p>
+<p>linux下用来跟踪某个进程的系统调用。<br>sudo strace -p 21538</p>
+<ul>
+<li>在solaris下，对应的是dtrace。</li>
+<li>在mac下，对应的命令是：dtruss。</li>
+</ul>
 
             </div>
             <hr>

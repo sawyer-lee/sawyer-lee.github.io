@@ -6,13 +6,14 @@
 <head><meta name="generator" content="Hexo 3.8.0">
     <meta charset="utf-8">
     <meta name="keywords" content="使用Redis管道提升批量操作性能, Blogs of Sawyer.Lee">
-    <meta name="description" content="#简介
-
+    <meta name="description" content="简介
 最近在工作中使用了Redis的管道技术。
 发现对于互不相关的多次Redis操作使用管道可以极大的提升性能。
-特此记录。#浅析
+特此记录。
+
+浅析
 个人觉得问题可能出在TCP连接上。
-Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量">
+Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量的">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -364,29 +365,36 @@ Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量">
         <hr class="clearfix">
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>#简介</p>
-<ol>
+                <h1 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h1><ol>
 <li>最近在工作中使用了Redis的管道技术。</li>
 <li>发现对于互不相关的多次Redis操作使用管道可以极大的提升性能。</li>
-<li>特此记录。<br>#浅析</li>
+<li>特此记录。</li>
+</ol>
+<h1 id="浅析"><a href="#浅析" class="headerlink" title="浅析"></a>浅析</h1><ol>
 <li>个人觉得问题可能出在TCP连接上。</li>
 <li>Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量的时间消耗在TCP握手上。</li>
-<li>而管道可以合并多次TCP请求，统一发送，这样就可以节省大量的时间。<br>#代码示例<br>##初始化Redis连接</li>
+<li>而管道可以合并多次TCP请求，统一发送，这样就可以节省大量的时间。</li>
+</ol>
+<h1 id="代码示例"><a href="#代码示例" class="headerlink" title="代码示例"></a>代码示例</h1><h2 id="初始化Redis连接"><a href="#初始化Redis连接" class="headerlink" title="初始化Redis连接"></a>初始化Redis连接</h2><ol>
 <li>使用phpredis扩展，初始化Redis连接。</li>
-<li>代码略。<br>##获取毫秒数时间<pre><code>1. function getMillisecond() { 
+<li>代码略。</li>
+</ol>
+<h2 id="获取毫秒数时间"><a href="#获取毫秒数时间" class="headerlink" title="获取毫秒数时间"></a>获取毫秒数时间</h2><pre><code>1. function getMillisecond() { 
 2.     list($s1, $s2) = explode(&#39; &#39;, microtime()); 
 3.     return (float)sprintf(&#39;%.0f&#39;, (floatval($s1) + floatval($s2)) * 1000); 
 4. } </code></pre>
-##不使用事务 代码段：<pre><code>1. $sTime = getMillisecond();
+<h2 id="不使用事务-代码段："><a href="#不使用事务-代码段：" class="headerlink" title="不使用事务 代码段："></a>不使用事务 代码段：</h2><pre><code>1. $sTime = getMillisecond();
 2. for ($i = 0; $i &lt; 10000; $i++) {
 3.     $this-&gt;redis-&gt;set(&#39;Test:test&#39; . $i,&#39;test&#39;);
 4. }
 5. $eTime = getMillisecond();
 6. var_dump($eTime - $sTime);</code></pre>
-##结果（多次）：</li>
+<h2 id="结果（多次）："><a href="#结果（多次）：" class="headerlink" title="结果（多次）："></a>结果（多次）：</h2><ol>
 <li>float(3199)</li>
 <li>float(3145)</li>
-<li>float(3436)<br>##使用参数为MULTI的一般事务 代码段：<pre><code>1. $sTime = getMillisecond();
+<li>float(3436)</li>
+</ol>
+<h2 id="使用参数为MULTI的一般事务-代码段："><a href="#使用参数为MULTI的一般事务-代码段：" class="headerlink" title="使用参数为MULTI的一般事务 代码段："></a>使用参数为MULTI的一般事务 代码段：</h2><pre><code>1. $sTime = getMillisecond();
 2. $this-&gt;redis-&gt;multi(Redis::MULTI);
 3. for ($i = 0; $i &lt; 10000; $i++) {
 4.     $this-&gt;redis-&gt;set(&#39;Test:test&#39; . $i,&#39;test&#39;);
@@ -394,10 +402,12 @@ Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量">
 6. $this-&gt;redis-&gt;exec();
 7. $eTime = getMillisecond();
 8. var_dump($eTime - $sTime);</code></pre>
-##结果（多次）：</li>
+<h2 id="结果（多次）：-1"><a href="#结果（多次）：-1" class="headerlink" title="结果（多次）："></a>结果（多次）：</h2><ol>
 <li>float(3160)</li>
 <li>float(3410)</li>
-<li>float(3093)<br>##使用参数为PIPELINE的管道事务 代码段：<pre><code>1. $sTime = getMillisecond();
+<li>float(3093)</li>
+</ol>
+<h2 id="使用参数为PIPELINE的管道事务-代码段："><a href="#使用参数为PIPELINE的管道事务-代码段：" class="headerlink" title="使用参数为PIPELINE的管道事务 代码段："></a>使用参数为PIPELINE的管道事务 代码段：</h2><pre><code>1. $sTime = getMillisecond();
 2. $this-&gt;redis-&gt;multi(Redis::PIPELINE);
 3. for ($i = 0; $i &lt; 10000; $i++) {
 4.     $this-&gt;redis-&gt;set(&#39;Test:test&#39; . $i,&#39;test&#39;);
@@ -405,12 +415,16 @@ Redis使用TCP协议进行数据传输，在多次Redis命令中会有大量">
 6. $this-&gt;redis-&gt;exec();
 7. $eTime = getMillisecond();
 8. var_dump($eTime - $sTime);</code></pre>
-##结果（多次）：</li>
+<h2 id="结果（多次）：-2"><a href="#结果（多次）：-2" class="headerlink" title="结果（多次）："></a>结果（多次）：</h2><ol>
 <li>float(42)</li>
 <li>float(44)</li>
-<li>float(49)<br>#初步结论</li>
+<li>float(49)</li>
+</ol>
+<h1 id="初步结论"><a href="#初步结论" class="headerlink" title="初步结论"></a>初步结论</h1><ol>
 <li>由测试结果可以看出，管道技术由于合并了多次请求，可以有效的减少执行时间，加快效率。</li>
-<li>而一般型的事务可能只是把所有命令做了一个队列并依次发送，并没有合并请求。<br>#备注</li>
+<li>而一般型的事务可能只是把所有命令做了一个队列并依次发送，并没有合并请求。</li>
+</ol>
+<h1 id="备注"><a href="#备注" class="headerlink" title="备注"></a>备注</h1><ol>
 <li>以上结果目前只适用于PHP语言的phpredis扩展。</li>
 <li>不过可以推测在其他场景下使用管道应该也可以提升效率。待测试。</li>
 </ol>
